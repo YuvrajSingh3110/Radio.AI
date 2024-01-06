@@ -1,12 +1,12 @@
 import 'package:alan_voice/alan_voice.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:radio_mind/utils/ai_util.dart';
 import 'package:velocity_x/velocity_x.dart';
-
 import '../model/radio.dart';
 
 class HomePage extends StatefulWidget {
@@ -21,6 +21,18 @@ class _HomePageState extends State<HomePage> {
   late MyRadio _selectedRadio;
   Color _selectedColor = AIColors.primaryColor2;
   bool _isPlaying = false;
+
+  final suggestions = [
+    "Play",
+    "Stop",
+    "Play 104 FM",
+    "Play some rock music",
+    "Play 95 FM",
+    "Pause",
+    "Play next",
+    "Play previous",
+    "Play pop music",
+  ];
 
   final AudioPlayer _audioPlayer = AudioPlayer();
 
@@ -120,7 +132,31 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Drawer(),
+      drawer: Drawer(
+        child: Container(
+          color: _selectedColor ?? AIColors.primaryColor2,
+          child: radios != null
+              ? [
+                  100.heightBox,
+                  "All Channels".text.xl.white.semiBold.make().px8(),
+                  20.heightBox,
+                  ListView(
+                    padding: Vx.m0,
+                    shrinkWrap: true,
+                    children: radios
+                        .map((e) => ListTile(
+                              leading: CircleAvatar(
+                                backgroundImage: NetworkImage(e.icon),
+                              ),
+                              title: "${e.name} Fm".text.white.make(),
+                              subtitle: e.tagline.text.white.make(),
+                            ))
+                        .toList(),
+                  ).expand()
+                ].vStack(crossAlignment: CrossAxisAlignment.start)
+              : const Offstage(),
+        ),
+      ),
       body: Stack(
         fit: StackFit.expand,
         clipBehavior: Clip.antiAlias,
@@ -132,17 +168,41 @@ class _HomePageState extends State<HomePage> {
                 _selectedColor ?? AIColors.primaryColor2
               ], begin: Alignment.topLeft, end: Alignment.bottomRight))
               .make(),
-          AppBar(
-            title: "RadioMind".text.xl4.bold.white.make().shimmer(
-                primaryColor: Vx.purple300,
-                secondaryColor: Colors.white,
-                duration: const Duration(seconds: 3)),
-            backgroundColor: Colors.transparent,
-            centerTitle: true,
-          ).h(100),
+          [
+            AppBar(
+              title: "RadioMind".text.xl4.bold.white.make().shimmer(
+                  primaryColor: Vx.purple300,
+                  secondaryColor: Colors.white,
+                  duration: const Duration(seconds: 3)),
+              backgroundColor: Colors.transparent,
+              centerTitle: true,
+            ).h(100).px8(),
+            "Start with- Hey Alan 👇🏽".text.semiBold.make(),
+            10.heightBox,
+            VxSwiper.builder(
+                itemCount: suggestions.length,
+                height: 50,
+                viewportFraction: 0.35,
+                autoPlay: true,
+                autoPlayAnimationDuration: 1.seconds,
+                autoPlayCurve: Curves.linearToEaseOut,
+                enableInfiniteScroll: true,
+                itemBuilder: (context, index) {
+                  final s = suggestions[index];
+                  return Chip(
+                    label: s.text.make(),
+                    backgroundColor: Vx.randomColor,
+                  );
+                })
+          ].vStack(),
+          10.heightBox,
           VxSwiper.builder(
             itemCount: radios.length,
-            aspectRatio: 1.0,
+            aspectRatio: context.mdWindowSize == MobileDeviceSize.small
+                ? 1.0
+                : context.mdWindowSize == MobileDeviceSize.medium
+                    ? 3.0
+                    : 4.0,
             enlargeCenterPage: true,
             onPageChanged: (index) {
               _selectedRadio = radios[index];
